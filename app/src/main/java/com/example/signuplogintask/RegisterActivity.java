@@ -50,6 +50,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private TextView birthDate;
     private Button signUp;
 
+
     //keys
     private static final String FIRST_NAME = "first_name";
     private static final String LAST_NAME = "last_name";
