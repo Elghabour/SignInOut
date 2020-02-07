@@ -48,7 +48,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private EditText confirmPassword;
     private EditText password;
     private TextView birthDate;
-    private Button signUp;
+
 
     //keys
     private static final String FIRST_NAME = "first_name";
@@ -71,6 +71,8 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        Button signUp;
+
         fName = findViewById(R.id.signUpFirstName);
         lName = findViewById(R.id.signUpLastName);
         genderGroup = findViewById(R.id.radioGroup);
@@ -91,7 +93,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
         //country
         Locale[] locale = Locale.getAvailableLocales();
-        ArrayList<String> countries = new ArrayList<String>();
+        ArrayList<String> countries = new ArrayList<>();
         String country;
         for( Locale loc : locale ){
             country = loc.getDisplayCountry();
@@ -100,7 +102,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
             }
         }
         Collections.sort(countries, String.CASE_INSENSITIVE_ORDER);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, countries);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item, countries);
         countrySelect.setAdapter(adapter);
 
 
@@ -108,11 +110,11 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         auth = FirebaseAuth.getInstance();
 
         signUp.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View v) {
                 String txt_email = email.getText().toString();
                 String txt_password = password.getText().toString();
-                String txt_confirmPassword = confirmPassword.getText().toString();
 
                 if(TextUtils.isEmpty(fName.getText().toString())){
                     fName.setError("Enter your First Name");
@@ -135,8 +137,8 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
                     }else{
                         Toast.makeText(RegisterActivity.this, "Too short password", Toast.LENGTH_SHORT).show();
                     }
-                } else if(TextUtils.isEmpty(txt_confirmPassword)){
-                        confirmPassword.setError("Enter your Confirm Password");
+                } else if(TextUtils.isEmpty(confirmPassword.getText().toString())){
+                    confirmPassword.setError("Enter your Confirm Password");
                 } else if(! confirmPassword.getText().toString().equals(password.getText().toString())){
                     confirmPassword.setError("Password doesn't match");
                 } else if (! isValidPassword(confirmPassword.getText().toString())){
@@ -150,8 +152,8 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
 
         //makes Egypt the default country
-        ArrayAdapter<String> spinnerAdap = (ArrayAdapter<String>) countrySelect.getAdapter();
-        int spinnerPosition = spinnerAdap.getPosition("Egypt");
+        ArrayAdapter<String> spinnerAdapter = (ArrayAdapter<String>) countrySelect.getAdapter();
+        int spinnerPosition = spinnerAdapter.getPosition("Egypt");
         countrySelect.setSelection(spinnerPosition);
 
     }//end of onCreate
@@ -192,22 +194,34 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
 
 
-
     ///////Signing up
     private void signUpUser(String email, String password) {
         auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this , new OnCompleteListener<AuthResult>() {
             @Override
             public void onComplete(@NonNull Task<AuthResult> task) {
                 if (task.isSuccessful()){
-                    Toast.makeText(RegisterActivity.this, "Registered Successfully!", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(RegisterActivity.this , HomeActivity.class));
-                    finish();
+                    auth.getCurrentUser().sendEmailVerification()
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if(task.isComplete()){
+                                Toast.makeText(RegisterActivity.this, "Registered Successfully!" + "\n"+ "Check your verification email", Toast.LENGTH_LONG).show();
+                                startActivity(new Intent(RegisterActivity.this , LoginActivity.class));
+                                finish();
+                            }else {
+                                Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    });
+
                 } else {
                     Toast.makeText(RegisterActivity.this, "Registration failed!", Toast.LENGTH_SHORT).show();
                 }
             }
         });
     }//end of signUpUser
+
+
 
     private void saveUserData() {
         int genderID = genderGroup.getCheckedRadioButtonId();
@@ -232,18 +246,16 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
-                        Log.d("saveData", "Done");
+                        Log.d("saveUserData", "Done");
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d("saveData", e.toString());
+                        Log.d("saveUserData", e.toString());
                     }
                 });
     }//end of saveUserData
-
-
 
 
 

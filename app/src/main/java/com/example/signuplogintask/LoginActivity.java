@@ -116,28 +116,22 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    ///////////////////////////////if already signed in
-//    @Override
-//    public void onStart() {
-//        super.onStart();
-//        // Check if user is signed in (non-null) and update UI accordingly.
-//        FirebaseUser currentUser = auth.getCurrentUser();
-//
-//        //updateUI(currentUser);
-//    }
+    ///////////////////////////////if the user is already signed in
+    @Override
+    public void onStart() {
+        super.onStart();
+        // Check if user is signed in (non-null)
+        if (auth.getCurrentUser() != null && auth.getCurrentUser().isEmailVerified()){
+            startActivity(new Intent(LoginActivity.this , HomeActivity.class));
+            finish();
+        }
 
-
-
-
-
-
-
+        //updateUI(currentUser);
+    }
 
 
 
     //// google
-
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -185,18 +179,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-
-
-
-
-
-
-
-
-
-
     // email and password
-
     private void loginUser( String txt_email,  String txt_password) {
         auth.signInWithEmailAndPassword(txt_email, txt_password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -205,12 +188,18 @@ public class LoginActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
 
                         if (task.isSuccessful()) {
-                            Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
-                            startActivity(new Intent(LoginActivity.this , HomeActivity.class));
-                            finish();
-                            // Sign in success, update UI with the signed-in user's information
-                            //FirebaseUser user = auth.getCurrentUser();
-                            //updateUI(user);
+                            if(auth.getCurrentUser().isEmailVerified()){
+                                //Toast.makeText(LoginActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                                startActivity(new Intent(LoginActivity.this , HomeActivity.class));
+                                finish();
+                                // Sign in success, update UI with the signed-in user's information
+                                //FirebaseUser user = auth.getCurrentUser();
+                                //updateUI(user);
+                            }else{
+                                Toast.makeText(LoginActivity.this, "Please verify your Email",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+
                         } else {
                             try {
                                 throw task.getException();
@@ -233,11 +222,9 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 });
 
-
     }
 
 //        private void updateUI(FirebaseUser user) {
-//            hideProgressBar();
 //            if (user != null) {
 //                mStatusTextView.setText(getString(R.string.emailpassword_status_fmt,
 //                        user.getEmail(), user.isEmailVerified()));
