@@ -113,18 +113,18 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
             @Override
             public void onClick(View v) {
-                String txt_email = email.getText().toString();
+                String txt_email = email.getText().toString().trim();
                 String txt_password = password.getText().toString();
 
-                if(TextUtils.isEmpty(fName.getText().toString())){
+                if(TextUtils.isEmpty(fName.getText().toString().trim())){
                     fName.setError("Enter your First Name");
-                } else if(TextUtils.isEmpty(lName.getText().toString())){
+                } else if(TextUtils.isEmpty(lName.getText().toString().trim())){
                     lName.setError("Enter your Last Name");
                 } else if (birthDate.getText().toString().equals("Select Your Date Of Birth")){
                     Toast.makeText(RegisterActivity.this, "Select your date of birth", Toast.LENGTH_SHORT).show();
                 } else if (genderGroup.getCheckedRadioButtonId() == -1){
                     Toast.makeText(RegisterActivity.this, "Select Your Gender", Toast.LENGTH_SHORT).show();
-                } else if(! phone.getText().toString().matches(VALID_PHONE)) {
+                } else if(! phone.getText().toString().trim().matches(VALID_PHONE)) {
                     phone.setError("Phone is not valid");
                 } else if (TextUtils.isEmpty(txt_email)){
                     email.setError("Enter your Email");
@@ -188,7 +188,8 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         if (year > yearNow || year >= yearNow &&  month > monthNow || year >= yearNow &&  month >= monthNow && dayOfMonth > dayNow) {
             Toast.makeText(RegisterActivity.this, "Date of Birth can't be from the future!", Toast.LENGTH_LONG).show();
         }
-        String date =  dayOfMonth + "/" + month + 1 + "/" + year;
+        month += 1;
+        String date =  dayOfMonth + "/" + month + "/" + year;
         birthDate.setText(date);
     }
 
@@ -227,11 +228,11 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         int genderID = genderGroup.getCheckedRadioButtonId();
         RadioButton selectedRadioButton = findViewById(genderID);
 
-        String firstName = fName.getText().toString();
-        String lastName = lName.getText().toString();
+        String firstName = fName.getText().toString().trim();
+        String lastName = lName.getText().toString().trim();
         String userGender= selectedRadioButton.getText().toString();
         String userCountry = countrySelect.getSelectedItem().toString();
-        String userPhone = phone.getText().toString();
+        String userPhone = phone.getText().toString().trim();
 
         Map<String, Object> userData = new HashMap<>();
 
@@ -255,6 +256,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
                         Log.d("saveUserData", e.toString());
                     }
                 });
+
     }//end of saveUserData
 
 

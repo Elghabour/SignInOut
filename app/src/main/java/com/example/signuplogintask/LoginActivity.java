@@ -5,7 +5,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -32,8 +34,8 @@ import com.google.firebase.auth.GoogleAuthProvider;
 
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText email;
-    private EditText password;
+    private EditText etloginEmail;
+    private EditText etloginPassword;
     private Button login;
 
     private FirebaseAuth auth;
@@ -54,8 +56,8 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         //Sign in with email and password//////////////////////////////////////
-        email = findViewById(R.id.loginEmail);
-        password = findViewById(R.id.loginPassword);
+        etloginEmail = findViewById(R.id.loginEmail);
+        etloginPassword = findViewById(R.id.loginPassword);
         login = findViewById(R.id.btnLogin);
 
 
@@ -69,9 +71,18 @@ public class LoginActivity extends AppCompatActivity {
         login.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String txt_email = email.getText().toString();
-                String txt_password = password.getText().toString();
-                loginUser(txt_email , txt_password);
+                String loginEmail = etloginEmail.getText().toString();
+                String loginPassword = etloginPassword.getText().toString();
+                if (TextUtils.isEmpty(loginEmail)){
+                    etloginEmail.setError("Enter your Email");
+                    //Toast.makeText(RegisterActivity.this, "Empty Email or Password!", Toast.LENGTH_SHORT).show();
+                } else if(! Patterns.EMAIL_ADDRESS.matcher(loginEmail).matches()){
+                    etloginEmail.setError("Email is not valid");
+                } else if(TextUtils.isEmpty(loginPassword)){
+                    etloginPassword.setError("Enter your Password");
+                }else{
+                    loginUser(loginEmail , loginPassword);
+                }
             }
         });
 
@@ -129,7 +140,11 @@ public class LoginActivity extends AppCompatActivity {
         //updateUI(currentUser);
     }
 
-
+    @Override
+    protected void onStop() {
+        super.onStop();
+        FirebaseAuth.getInstance().signOut();
+    }
 
     //// google
     @Override
@@ -196,7 +211,7 @@ public class LoginActivity extends AppCompatActivity {
                                 //FirebaseUser user = auth.getCurrentUser();
                                 //updateUI(user);
                             }else{
-                                Toast.makeText(LoginActivity.this, "Please verify your Email",
+                                Toast.makeText(LoginActivity.this, "Check your email for verification",
                                         Toast.LENGTH_SHORT).show();
                             }
 
@@ -204,11 +219,11 @@ public class LoginActivity extends AppCompatActivity {
                             try {
                                 throw task.getException();
                             } catch (FirebaseAuthInvalidUserException e) {
-                                email.setError("Invalid Email Address");
-                                email.requestFocus();
+                                etloginEmail.setError("Invalid Email Address");
+                                etloginEmail.requestFocus();
                             } catch (FirebaseAuthInvalidCredentialsException e) {
-                                password.setError("Wrong Password");
-                                password.requestFocus();
+                                etloginPassword.setError("Wrong Password");
+                                etloginPassword.requestFocus();
                             } catch (FirebaseNetworkException e) {
                                 Toast.makeText(LoginActivity.this, "No Network!", Toast.LENGTH_SHORT).show();
                             } catch (Exception e) {
