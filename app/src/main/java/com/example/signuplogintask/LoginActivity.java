@@ -225,6 +225,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 //        private void updateUI(FirebaseUser user) {
+//            hideProgressBar();
 //            if (user != null) {
 //                mStatusTextView.setText(getString(R.string.emailpassword_status_fmt,
 //                        user.getEmail(), user.isEmailVerified()));
