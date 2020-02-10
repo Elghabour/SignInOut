@@ -10,15 +10,17 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
+
+//gitHub country code picker
+import com.hbb20.CountryCodePicker;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -28,11 +30,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,14 +40,20 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
     private EditText fName;
     private EditText lName;
-    private Spinner countrySelect;
+//    private Spinner countrySelect;
     private RadioGroup genderGroup;
-    private EditText phone;
+//    private EditText phone;
     private EditText email;
     private EditText confirmPassword;
     private EditText password;
     private TextView birthDate;
+    private CountryCodePicker ccpCountry;
+    private CountryCodePicker ccpCode;
+    private EditText editTextCarrierNumber;
 
+    private ViewFlipper viewFlipper;
+    private Button btnBack;
+    private Button btnNext;
 
     //keys
     private static final String FIRST_NAME = "first_name";
@@ -56,10 +61,13 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private static final String USER_GENDER = "gender";
     private static final String USER_COUNTRY = "country";
     private static final String USER_PHONE = "phone";
+    //default date in the date dialog
+    private static final int DEFAULT_DAY = 1;
+    private static final int DEFAULT_MONTH = 0;
+    private static final int DEFAULT_YEAR = 1990;
     private static final String BIRTH_DATE = "birth_date";
-    private static final String VALID_PHONE = "^[+]?[0-9]{8,20}$";
-    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{4,}$";
-
+//    private static final String VALID_PHONE = "^[+]?[0-9]{8,20}$";
+    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
 
     //firebase
     private FirebaseAuth auth;
@@ -76,57 +84,74 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         fName = findViewById(R.id.signUpFirstName);
         lName = findViewById(R.id.signUpLastName);
         genderGroup = findViewById(R.id.radioGroup);
-        countrySelect = findViewById(R.id.countrySpinner);
-        phone = findViewById(R.id.phone);
+        birthDate = findViewById(R.id.show_dialog);
+        //country selection
+        ccpCountry = findViewById(R.id.ccpCountry);
+        ccpCountry.setAutoDetectedCountry(true);
+        //code and phone
+        ccpCode = findViewById(R.id.ccpCode);
+        editTextCarrierNumber = findViewById(R.id.editText_carrierNumber);
+        ccpCode.registerCarrierNumberEditText(editTextCarrierNumber);
+//        countrySelect = findViewById(R.id.countrySpinner);
+//        phone = findViewById(R.id.phone);
         email = findViewById(R.id.signUpEmail);
         password = findViewById(R.id.signUpPassword);
         confirmPassword = findViewById(R.id.signUpConfirmPassword);
         signUp = findViewById(R.id.btnSignUp);
-        birthDate = findViewById(R.id.show_dialog);
+        //flipper
+        viewFlipper = findViewById(R.id.view_flipper);
+        btnBack = findViewById(R.id.btnBack);
+        btnNext = findViewById(R.id.btnNext);
 
-        birthDate.setOnClickListener(new View.OnClickListener() {
+
+        //changes the phone code when country changes
+        ccpCountry.setOnCountryChangeListener(new CountryCodePicker.OnCountryChangeListener() {
+            @Override
+            public void onCountrySelected() {
+                ccpCode.setCountryForNameCode(ccpCountry.getSelectedCountryNameCode());
+            }
+        });
+
+
+
+        auth = FirebaseAuth.getInstance();
+
+
+        birthDate.setOnClickListener( new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showDatePickerDialog();
             }
         });
 
-        //country
-        Locale[] locale = Locale.getAvailableLocales();
-        ArrayList<String> countries = new ArrayList<>();
-        String country;
-        for( Locale loc : locale ){
-            country = loc.getDisplayCountry();
-            if( country.length() > 0 && !countries.contains(country) ){
-                countries.add( country );
-            }
-        }
-        Collections.sort(countries, String.CASE_INSENSITIVE_ORDER);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item, countries);
-        countrySelect.setAdapter(adapter);
+//        ordinary country spinner initiation
+//        Locale[] locale = Locale.getAvailableLocales();
+//        ArrayList<String> countries = new ArrayList<>();
+//        String country;
+//        for( Locale loc : locale ){
+//            country = loc.getDisplayCountry();
+//            if( country.length() > 0 && !countries.contains(country) ){
+//                countries.add( country );
+//            }
+//        }
+//        Collections.sort(countries, String.CASE_INSENSITIVE_ORDER);
+//        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,android.R.layout.simple_spinner_item, countries);
+//        countrySelect.setAdapter(adapter);
+//        //makes Egypt the default country
+//        ArrayAdapter<String> spinnerAdapter = (ArrayAdapter<String>) countrySelect.getAdapter();
+//        int spinnerPosition = spinnerAdapter.getPosition("Egypt");
+//        countrySelect.setSelection(spinnerPosition);
 
 
-        ////////////////////Sign up
-        auth = FirebaseAuth.getInstance();
 
+        ////////////////////Sign up button
         signUp.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View v) {
                 String txt_email = email.getText().toString().trim();
                 String txt_password = password.getText().toString();
 
-                if(TextUtils.isEmpty(fName.getText().toString().trim())){
-                    fName.setError("Enter your First Name");
-                } else if(TextUtils.isEmpty(lName.getText().toString().trim())){
-                    lName.setError("Enter your Last Name");
-                } else if (birthDate.getText().toString().equals("Select Your Date Of Birth")){
-                    Toast.makeText(RegisterActivity.this, "Select your date of birth", Toast.LENGTH_SHORT).show();
-                } else if (genderGroup.getCheckedRadioButtonId() == -1){
-                    Toast.makeText(RegisterActivity.this, "Select Your Gender", Toast.LENGTH_SHORT).show();
-                } else if(! phone.getText().toString().trim().matches(VALID_PHONE)) {
-                    phone.setError("Phone is not valid");
-                } else if (TextUtils.isEmpty(txt_email)){
+                if (TextUtils.isEmpty(txt_email)){
                     email.setError("Enter your Email");
                     //Toast.makeText(RegisterActivity.this, "Empty Email or Password!", Toast.LENGTH_SHORT).show();
                 } else if(! Patterns.EMAIL_ADDRESS.matcher(txt_email).matches()){
@@ -143,18 +168,69 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
                     confirmPassword.setError("Password doesn't match");
                 } else if (! isValidPassword(confirmPassword.getText().toString())){
                     Toast.makeText(RegisterActivity.this, "Please add at least 1 Alphabet," + "\n" +" 1 Number and 1 Special Character", Toast.LENGTH_LONG).show();
-                } else {
+                }else{
                     signUpUser(txt_email , txt_password);
-                    saveUserData();
                 }
             }
         });//end of signUp.setOnClickListener
 
 
-        //makes Egypt the default country
-        ArrayAdapter<String> spinnerAdapter = (ArrayAdapter<String>) countrySelect.getAdapter();
-        int spinnerPosition = spinnerAdapter.getPosition("Egypt");
-        countrySelect.setSelection(spinnerPosition);
+
+        //the ViewFlipper Next and Previous buttons
+        btnBack.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btnNext.setVisibility(View.VISIBLE);
+                if (viewFlipper.getDisplayedChild()==1){
+                    v.setVisibility(View.INVISIBLE);
+
+                }
+                if (viewFlipper.getDisplayedChild()==0) {
+                    viewFlipper.stopFlipping();
+                } else {
+                    viewFlipper.setInAnimation(RegisterActivity.this, android.R.anim.slide_in_left);
+                    viewFlipper.setOutAnimation(RegisterActivity.this, android.R.anim.slide_out_right);
+
+                    viewFlipper.showPrevious();
+                }
+            }
+        });
+
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                viewFlipper.setInAnimation(RegisterActivity.this, R.anim.slide_in_right);
+                viewFlipper.setOutAnimation(RegisterActivity.this, R.anim.slide_out_left);
+
+                if(viewFlipper.getDisplayedChild()==0){
+                    if(TextUtils.isEmpty(fName.getText().toString().trim())){
+                        fName.setError("Enter your First Name");
+                    } else if(TextUtils.isEmpty(lName.getText().toString().trim())){
+                        lName.setError("Enter your Last Name");
+                    } else if (birthDate.getText().toString().equals("Select Your Date Of Birth")){
+                        Toast.makeText(RegisterActivity.this, "Select your date of birth", Toast.LENGTH_SHORT).show();
+                    } else if (genderGroup.getCheckedRadioButtonId() == -1){
+                        Toast.makeText(RegisterActivity.this, "Select Your Gender", Toast.LENGTH_SHORT).show();
+                    }else {
+                        btnBack.setVisibility(View.VISIBLE);
+                        viewFlipper.showNext();
+                    }
+                } else if (viewFlipper.getDisplayedChild()==1){
+                    if(TextUtils.isEmpty(editTextCarrierNumber.getText().toString().trim())){
+                        editTextCarrierNumber.setError("Enter your Phone");
+                    }
+                    else if(! ccpCode.isValidFullNumber()) {
+                        editTextCarrierNumber.setError("Phone is not valid");
+                    }else {
+                        v.setVisibility(View.INVISIBLE);
+                        viewFlipper.showNext();
+                    }
+                } else if (viewFlipper.getDisplayedChild() == 2) {
+                    viewFlipper.stopFlipping();
+                }
+            }
+        });
 
     }//end of onCreate
 
@@ -179,7 +255,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private int yearNow= c.get(Calendar.YEAR);
 
     public void showDatePickerDialog(){
-        DatePickerDialog datePickerDialog = new DatePickerDialog(this, this, dayNow, monthNow, yearNow);
+        DatePickerDialog datePickerDialog = new DatePickerDialog(this, this, DEFAULT_YEAR, DEFAULT_MONTH, DEFAULT_DAY);
         datePickerDialog.show();
     }
 
@@ -195,32 +271,35 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
 
 
+
     ///////Signing up
     private void signUpUser(String email, String password) {
-        auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(RegisterActivity.this , new OnCompleteListener<AuthResult>() {
+        auth.createUserWithEmailAndPassword(email, password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
             @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if (task.isSuccessful()){
-                    auth.getCurrentUser().sendEmailVerification()
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if(task.isComplete()){
-                                Toast.makeText(RegisterActivity.this, "Registered Successfully!" + "\n"+ "Check your verification email", Toast.LENGTH_LONG).show();
-                                startActivity(new Intent(RegisterActivity.this , LoginActivity.class));
-                                finish();
-                            }else {
-                                Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+            public void onSuccess(AuthResult authResult) {
+                saveUserData();
+                auth.getCurrentUser().sendEmailVerification()
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if(task.isComplete()){
+                                    Toast.makeText(RegisterActivity.this, "Registered Successfully!" + "\n"+ "Check your verification email", Toast.LENGTH_LONG).show();
+                                    startActivity(new Intent(RegisterActivity.this , LoginActivity.class));
+                                    finish();
+                                }else {
+                                    Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                                }
                             }
-                        }
-                    });
-
-                } else {
-                    Toast.makeText(RegisterActivity.this, "Registration failed!", Toast.LENGTH_SHORT).show();
-                }
+                        });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(RegisterActivity.this, "Email already in use!", Toast.LENGTH_LONG).show();
             }
         });
     }//end of signUpUser
+
 
 
 
@@ -228,19 +307,14 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         int genderID = genderGroup.getCheckedRadioButtonId();
         RadioButton selectedRadioButton = findViewById(genderID);
 
-        String firstName = fName.getText().toString().trim();
-        String lastName = lName.getText().toString().trim();
-        String userGender= selectedRadioButton.getText().toString();
-        String userCountry = countrySelect.getSelectedItem().toString();
-        String userPhone = phone.getText().toString().trim();
-
         Map<String, Object> userData = new HashMap<>();
 
-        userData.put(FIRST_NAME, firstName);
-        userData.put(LAST_NAME, lastName);
-        userData.put(USER_GENDER, userGender);
-        userData.put(USER_COUNTRY, userCountry);
-        userData.put(USER_PHONE, userPhone);
+        userData.put(FIRST_NAME, fName.getText().toString().trim());
+        userData.put(LAST_NAME, lName.getText().toString().trim());
+        userData.put(USER_GENDER, selectedRadioButton.getText().toString());
+//        userData.put(USER_COUNTRY, countrySelect.getSelectedItem().toString());
+        userData.put(USER_COUNTRY, ccpCountry.getSelectedCountryName());
+        userData.put(USER_PHONE, ccpCode.getFullNumber());
         userData.put(BIRTH_DATE, birthDate.getText().toString());
 
         db.collection("users").document().set(userData)

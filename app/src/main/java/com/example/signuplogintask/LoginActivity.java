@@ -61,7 +61,7 @@ public class LoginActivity extends AppCompatActivity {
         login = findViewById(R.id.btnLogin);
 
 
-        //footer
+        //footer///////////////////////////////////////////////////////////////
         goToSignUp =findViewById(R.id.signUpLink);
         goToForgotPass= findViewById(R.id.forgotPassLink);
 
