@@ -107,7 +107,6 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
-
         //////////////Footer
         goToSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
