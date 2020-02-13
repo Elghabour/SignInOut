@@ -88,7 +88,7 @@ public class SignupBioActivity extends AppCompatActivity {
                             }
                         });
 
-                Toast.makeText(SignupBioActivity.this, "First verify your account then login", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SignupBioActivity.this, "First verify your account then login", Toast.LENGTH_LONG).show();
             }
         });
 

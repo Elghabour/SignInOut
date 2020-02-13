@@ -108,41 +108,41 @@ public class SignupPickPictureActivity extends AppCompatActivity {
 
     private void uploadImage() {
         if (mImageUri != null) {
-            StorageReference profileImageRef = FirebaseStorage.getInstance().getReference("profilepics/" + System.currentTimeMillis()
-                    + "." + getFileExtension(mImageUri));
+            final StorageReference profileImageRef = FirebaseStorage.getInstance().getReference("profilepics/" + System.currentTimeMillis()
+                    + "." + getFileExtension(mImageUri).trim());
 
             profileImageRef.putFile(mImageUri)
-//                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-//                        @Override
-//                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-//                            Handler handler = new Handler();
-//                            handler.postDelayed(new Runnable() {
-//                                @Override
-//                                public void run() {
-//                                    mProgressBar.setProgress(0);
-//                                }
-//                            }, 500);
-//
-//                            Toast.makeText(SignupPickPictureActivity.this, "Upload successful", Toast.LENGTH_LONG).show();
-//
-//                            Map<String,Object> profile_picture_url = new HashMap<>();
-//                            profile_picture_url.put("profile_picture_url", fileReference.getName());
-//
-//                            db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).update(profile_picture_url)
-//                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
-//                                        @Override
-//                                        public void onSuccess(Void aVoid) {
-//                                            Log.d("saveRegisterDate", "Done");
-//                                        }
-//                                    })
-//                                    .addOnFailureListener(new OnFailureListener() {
-//                                        @Override
-//                                        public void onFailure(@NonNull Exception e) {
-//                                            Log.d("saveRegisterDate", e.toString());
-//                                        }
-//                                    });
-//                        }
-//                    })
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mProgressBar.setProgress(0);
+                                }
+                            }, 500);
+
+                            Toast.makeText(SignupPickPictureActivity.this, "Upload successful", Toast.LENGTH_LONG).show();
+
+                            Map<String,Object> profile_picture_url = new HashMap<>();
+                            profile_picture_url.put("profile_picture_url", profileImageRef.getName());
+
+                            db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).update(profile_picture_url)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            Log.d("saveRegisterDate", "Done");
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Log.d("saveRegisterDate", e.toString());
+                                        }
+                                    });
+                        }
+                    })
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
