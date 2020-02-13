@@ -23,7 +23,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.StorageTask;
 import com.google.firebase.storage.UploadTask;
 
 import java.util.HashMap;
@@ -108,8 +107,8 @@ public class SignupPickPictureActivity extends AppCompatActivity {
 
     private void uploadImage() {
         if (mImageUri != null) {
-            final StorageReference profileImageRef = FirebaseStorage.getInstance().getReference("profilepics/" + System.currentTimeMillis()
-                    + "." + getFileExtension(mImageUri).trim());
+            final StorageReference profileImageRef = FirebaseStorage.getInstance().getReference("profilepics/"
+                    + System.currentTimeMillis() + "." + getFileExtension(mImageUri).trim());
 
             profileImageRef.putFile(mImageUri)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -121,12 +120,12 @@ public class SignupPickPictureActivity extends AppCompatActivity {
                                 public void run() {
                                     mProgressBar.setProgress(0);
                                 }
-                            }, 500);
+                            }, 1000);
 
                             Toast.makeText(SignupPickPictureActivity.this, "Upload successful", Toast.LENGTH_LONG).show();
 
                             Map<String,Object> profile_picture_url = new HashMap<>();
-                            profile_picture_url.put("profile_picture_url", profileImageRef.getName());
+                            profile_picture_url.put("profile_picture_url", taskSnapshot.getMetadata().getPath());
 
                             db.collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).update(profile_picture_url)
                                     .addOnSuccessListener(new OnSuccessListener<Void>() {
