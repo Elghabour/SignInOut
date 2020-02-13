@@ -20,6 +20,7 @@ import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 //gitHub country code picker
+import com.google.firebase.firestore.FieldValue;
 import com.hbb20.CountryCodePicker;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -55,17 +56,10 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private Button btnBack;
     private Button btnNext;
 
-    //keys
-    private static final String FIRST_NAME = "first_name";
-    private static final String LAST_NAME = "last_name";
-    private static final String USER_GENDER = "gender";
-    private static final String USER_COUNTRY = "country";
-    private static final String USER_PHONE = "phone";
     //default date in the date dialog
     private static final int DEFAULT_DAY = 1;
     private static final int DEFAULT_MONTH = 0;
     private static final int DEFAULT_YEAR = 1990;
-    private static final String BIRTH_DATE = "birth_date";
 //    private static final String VALID_PHONE = "^[+]?[0-9]{8,20}$";
     private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{8,}$";
 
@@ -73,12 +67,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
     private FirebaseAuth auth;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-//
-    //
-    //
-    //
-    //
-    //
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -272,6 +261,7 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         month += 1;
         String date =  dayOfMonth + "/" + month + "/" + year;
         birthDate.setText(date);
+
     }
 
 
@@ -282,14 +272,14 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
         auth.createUserWithEmailAndPassword(email, password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
             @Override
             public void onSuccess(AuthResult authResult) {
-                saveUserData();
+                saveUserData(auth.getCurrentUser().getUid());
                 auth.getCurrentUser().sendEmailVerification()
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
                                 if(task.isComplete()){
                                     Toast.makeText(RegisterActivity.this, "Registered Successfully!" + "\n"+ "Check your verification email", Toast.LENGTH_LONG).show();
-                                    startActivity(new Intent(RegisterActivity.this , LoginActivity.class));
+                                    startActivity(new Intent(RegisterActivity.this , SignupPickPictureActivity.class));
                                     finish();
                                 }else {
                                     Toast.makeText(RegisterActivity.this, task.getException().getMessage(), Toast.LENGTH_SHORT).show();
@@ -308,21 +298,20 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
 
 
 
-    private void saveUserData() {
+    private void saveUserData(String userID) {
         int genderID = genderGroup.getCheckedRadioButtonId();
         RadioButton selectedRadioButton = findViewById(genderID);
 
-        Map<String, Object> userData = new HashMap<>();
+        User userData = new User(fName.getText().toString().trim(),lName.getText().toString().trim(),
+                selectedRadioButton.getText().toString(),birthDate.getText().toString(),
+                ccpCountry.getSelectedCountryName(),ccpCode.getFullNumber(),
+                "","", 0.0f);
 
-        userData.put(FIRST_NAME, fName.getText().toString().trim());
-        userData.put(LAST_NAME, lName.getText().toString().trim());
-        userData.put(USER_GENDER, selectedRadioButton.getText().toString());
-//        userData.put(USER_COUNTRY, countrySelect.getSelectedItem().toString());
-        userData.put(USER_COUNTRY, ccpCountry.getSelectedCountryName());
-        userData.put(USER_PHONE, ccpCode.getFullNumber());
-        userData.put(BIRTH_DATE, birthDate.getText().toString());
+        Map<String,Object> registerDate = new HashMap<>();
+        registerDate.put("register_date", FieldValue.serverTimestamp());
 
-        db.collection("users").document().set(userData)
+
+        db.collection("users").document(userID).set(userData)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -336,6 +325,19 @@ public class RegisterActivity extends AppCompatActivity implements DatePickerDia
                     }
                 });
 
+        db.collection("users").document(userID).update(registerDate)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d("saveRegisterDate", "Done");
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d("saveRegisterDate", e.toString());
+                    }
+                });
     }//end of saveUserData
 
 
