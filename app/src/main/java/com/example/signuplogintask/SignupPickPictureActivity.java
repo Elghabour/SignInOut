@@ -107,7 +107,8 @@ public class SignupPickPictureActivity extends AppCompatActivity {
 
     private void uploadImage() {
         if (mImageUri != null) {
-            final StorageReference profileImageRef = FirebaseStorage.getInstance().getReference("profilepics/"
+            final StorageReference profileImageRef = FirebaseStorage.getInstance().getReference("profile_pics/"
+                    + FirebaseAuth.getInstance().getCurrentUser().getUid()+ "/"
                     + System.currentTimeMillis() + "." + getFileExtension(mImageUri).trim());
 
             profileImageRef.putFile(mImageUri)
